@@ -1,0 +1,77 @@
+第4回 Laravel+ Ajax select2連携
+
+① UserControllerコントローラ作成
+
+ >php artisan make:controller UserController
+
+② usersテーブルからデータを取得するindexメソッド
+
+//indexメソッド
+    public function index(Request $request)
+    {
+      //メソッドの引数でオブジェクトのインスタンス化⇒ メソッドインジェクション
+
+      //DB処理：usersテーブルから全データを取得する。
+      //Eloquentシステムでusersテーブルオブジェクトuserを使用する。
+      $query = \App\User::all();
+      //$queryをデバック
+      dd($query);
+      return $query;
+    }
+
+③web.phpにUserController indexメソッドを呼び出すルートを設定
+
+　Route::get('/user','UserController@index');
+
+④select2のテストページ作成
+
+select2.blade.php作成
+
+<html>
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.10/css/select2.min.css">
+</head>
+<body>
+    <div>
+        <select style="width:250px;" class="select2-ajax"></select>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.10/js/select2.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.10/js/i18n/ja.js"></script>
+    <script>
+      $(function(){
+        $('.select2-ajax').select2({
+            ajax:{
+              //非同期通信するサーバURL
+              url:'/user',
+              dataType:'json',
+              processResults(response){
+                //ローカル配列定義
+                let options =[];
+                //サーバと非同期通信してデータが返ってきたときの処理
+                //配列オブジェクト.forEach
+                response.forEach((user)=>{
+                    //select2用の連想配列を作る
+                    options.push({
+                      id:user.id,
+                      text:user.name
+                    });
+                });
+
+                return{
+                  //select2にサーバからのデータを配列で戻す
+                  results:options
+                };
+              }
+            }
+            ,
+            allowClear: true,
+            placeholder: '',
+            language: 'ja'
+        });
+      });
+    </script>
+  </body>
+</html>
+
+⑤Laravel debugbarツールインストール
